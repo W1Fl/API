@@ -6,7 +6,7 @@ tpl_id = '106935'
 key = '3adefdc32c23a808d9af76aecb78a6d1'
 
 
-def send(phonenumber,tpl_value):
+def send(phonenumber, tpl_value):
     params = {
         'mobile': phonenumber,
         'tpl_id': tpl_id,
@@ -19,4 +19,4 @@ def send(phonenumber,tpl_value):
 
 
 if __name__ == '__main__':
-    print(send('18285734822','23232323'))
+    print(send('18285734822', '23232323'))

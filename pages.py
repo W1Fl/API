@@ -1,16 +1,19 @@
 from tools.cookie import *
-import massagesend
+from tools.cache import *
+import messagesend
 import modules
 import random
 import queue
 import json
+import time
 import hashlib
 
-t = 1
-cache = {'massage': [],'cookie':[]}
-#设置缓存
-user=modules.module(table='user')
-movies=modules.module(table='movies')
+message = Cache('message')
+cookiec = Cache('cookie')
+# 设置缓存
+
+user = modules.module(table='user')
+movies = modules.module(table='movies')
 
 
 def test(req, res):
@@ -21,9 +24,7 @@ def test(req, res):
     :return:
     '''
     res('200 ok', [('content-type', 'text/html; charset=utf-8')])
-    global t
-    t += 1
-    return bytes(repr(cache), 'utf-8')
+    return ''
 
 
 def signup(req, res):
@@ -39,41 +40,44 @@ def signup(req, res):
             删除该条缓存
     验证缓存数量 大于最大缓存数量时删除最后一条缓存
     '''
-    res('200 ok', [])
-    reqdata = req['params']#选择通过get或post获取请求数据
-    massagecache = cache['massage']
+    res('200 ok', [
+        ('Content-Type', 'text/html;charset=UTF-8'),
+        ('Server', 'yuyangServer v0.1'),
+    ])
+    reqdata = req['params']  # 选择通过get或post获取请求数据
     if 'number' in reqdata:
         number = reqdata['number']
+
         if 'key' not in reqdata:
-            tpl_value = ''.join([str(random.randint(0, 10)) for i in range(5)])
-            massagecache.insert(0, (number, tpl_value))
-            print(number, tpl_value)
-            print(massagesend.send(number, tpl_value))
+            tpl_value = ''.join([str(random.randint(0, 9)) for i in range(6)])
+            message.set(number, tpl_value, 120)
+            print(message[number])
+            messagesend.send(number, tpl_value)
+            yield b'waiting'
+
         elif 'password' in reqdata:
-            j = -1
-            for i in massagecache:
-                j+=1
-                if i[0] == number:
-                    if i[1] == reqdata['key']:
-                        id=user.exe("select id from user where usr='{}'".format(number))
-                        if id:
-                            sql=user.update("id='{0}'".format(id[0][0]),password=reqdata['password'])
-                        else:
-                            sql=user.insert(usr=number,password=reqdata['password'])
-                        print(sql)
-                        user.exe(sql)
-                        user.commit()
-                        massagecache.pop(j)
-                        return b'seccess'
+            if message[number]:
+                if message[number] == reqdata['key']:
+                    id = user.exe("select id from user where usr='{}'".format(number))
+                    if id:
+                        sql = user.update("id='{0}'".format(id[0][0]), password=reqdata['password'])
                     else:
-                        return b'error'
-            if not j+1:
-                return b'serverError'
+                        sql = user.insert(usr=number, password=reqdata['password'])
+                    print(sql)
+                    user.exe(sql)
+                    user.commit()
+                    message.del_(number)
+                    yield b'seccess'
+                    return
+                else:
+                    yield b'error'
+                    return
         else:
-            return b'no password'
-    if len(massagecache) > 10:
-        massagecache.pop()
-    print(massagecache)
+            yield b'no password'
+            return
+    else:
+        yield '参数错误'.encode('utf-8')
+        return
 
 
 def login(req, res):
@@ -86,34 +90,35 @@ def login(req, res):
 
     reqdata = req['params']
     if 'num' in reqdata and 'password' in reqdata:
-        usr=reqdata['num']
-        password=reqdata['password']
-        password_=user.select("WHERE usr={0}".format(usr),'password')[0]['password']
-        if password_==password:
-            cookie=mycookie(
-                    cookie=dict(
-                        token=hashlib.md5(
-                            usr.encode('utf-8')).hexdigest()),
-                    user=user
-                )
-            cache['cookie'].append(cookie)
+        usr = reqdata['num']
+        password = reqdata['password']
+        password_ = user.select("WHERE usr={0}".format(usr), 'password')[0]['password']
+        if password_ == password:
+            cookie = mycookie(
+                cookie=dict(
+                    token=hashlib.md5(
+                        (usr + str(time.time())).encode('utf-8')).hexdigest()),
+                user=usr
+            )
+            cookiec.set(cookie.user, cookie, 0)
             res('200 ok', [
                 ('Content-Type', 'text/html;charset=UTF-8'),
                 ('Server', 'yuyangServer v0.1'),
                 *cookie.outputtuple()
             ])
-            return bytes(usr,'utf-8')
+            return bytes(usr, 'utf-8')
         else:
-            result= bytes('密码错误','utf-8')
+            result = bytes('密码错误', 'utf-8')
     else:
-        result= bytes('参数错误','utf-8')
+        result = bytes('参数错误', 'utf-8')
     res('200 ok', [
         ('Content-Type', 'text/html;charset=UTF-8'),
         ('Server', 'yuyangServer v0.1'),
     ])
     return result
 
-def movie(req,res):
+
+def movie(req, res):
     '''
     电影目录和信息获取
     请求可携带参数 id ，则返回movies表该id的整行
@@ -126,21 +131,23 @@ def movie(req,res):
         ('Content-Type', 'text/html;charset=UTF-8'),
         ('Server', 'yuyangServer v0.1'),
     ])
-    reqdata = req['params']#选择通过get或post获取请求数据
+    reqdata = req['params']  # 选择通过get或post获取请求数据
     try:
-        cookie=searchobjbycookie(cache['cookie'],'token',mycookie(req['cookie']).get('token').value)
-    except:
-        cookie=None
+        cookie = searchobjbycookie(cookiec, 'token', mycookie(req['cookie']).get('token').value)
+    except Exception as e:
+        print(e)
+        cookie = None
     if not cookie:
         return '没有登陆'.encode('utf-8')
     if not reqdata:
-        result=movies.select("",'id','片名','海报','评分')
-    elif 'id'in reqdata:
-        result=movies.select("WHERE id='{0}'".format(reqdata['id']),'*')
-    elif 'id_start' in reqdata and 'id_limit'in reqdata:
-        result=movies.select(
-            "WHERE id>'{0}' and id<'{1}'".format(reqdata['id_start'],str(int(reqdata['id_start'])+int(reqdata['id_limit']))),
-            'id','片名','海报','评分'
+        result = movies.select("", 'id', '片名', '海报', '评分')
+    elif 'id' in reqdata:
+        result = movies.select("WHERE id='{0}'".format(reqdata['id']), '*')
+    elif 'id_start' in reqdata and 'id_limit' in reqdata:
+        result = movies.select(
+            "WHERE id>'{0}' and id<'{1}'".format(reqdata['id_start'],
+                                                 str(int(reqdata['id_start']) + int(reqdata['id_limit']))),
+            'id', '片名', '海报', '评分'
         )
     elif 'searchname' in reqdata:
         result = movies.select(
@@ -148,8 +155,9 @@ def movie(req,res):
             'id', '片名', '海报', '评分'
         )
     else:
-        result={'error':'请求参数错误'}
-    return bytes(json.dumps(result,ensure_ascii=False),'utf-8','ignore')
+        result = {'error': '请求参数错误'}
+    return bytes(json.dumps(result, ensure_ascii=False), 'utf-8', 'ignore')
+
 
 def notfound(req, res):
     res('404 notfound', [])

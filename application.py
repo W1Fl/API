@@ -5,7 +5,7 @@ def application(env, res):
         def urldecoder(s):
             result = {}
             if '=' not in s:
-                return None
+                return result
             try:
                 s = s.split('&')
             except:
@@ -41,4 +41,4 @@ def application(env, res):
     reqdata=requestsdecoder()
     baseurls=urls.urls()
     result=baseurls.run(reqdata,res)
-    yield result
+    return result

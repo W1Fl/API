@@ -122,11 +122,13 @@ API文档
 层次结构
 </h3>
 <p>
-项目顶层为application.py 被wsgi服务器调用<br/>
-application.py解析请求信息,调用路由urls.py<br/>
-urls.py 通过url参数调用pages.py的函数执行该路径的功能<br/>
-page.py作为应用执行,需要时使用modules.py执行数据库相关功能,使用tools/cookie.py执行cookie相关功能<br/>
+<pre>
+项目顶层为application.py 被wsgi服务器调用
+application.py解析请求信息,调用路由urls.py
+urls.py 通过url参数调用pages.py的函数执行该路径的功能
+page.py作为应用执行,需要时使用modules.py执行数据库相关功能,使用tools/cookie.py执行cookie相关功能,使用tools/cache.py完成后台缓存
 doubanspider.py独立存在,用于爬取豆瓣电影的数据保存到数据库
-setting.py保存设置信息,如连接数据库所需信息<br/>
+setting.py保存设置信息,如连接数据库所需信息
 数据库使用mysql
+</pre>
 </p>
