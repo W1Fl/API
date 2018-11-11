@@ -45,8 +45,8 @@ def signup(req, res):
         ('Server', 'yuyangServer v0.1'),
     ])
     reqdata = req['params']  # 选择通过get或post获取请求数据
-    if 'number' in reqdata:
-        number = reqdata['number']
+    if 'user' in reqdata:
+        number = reqdata['user']
 
         if 'key' not in reqdata:
             tpl_value = ''.join([str(random.randint(0, 9)) for i in range(6)])
@@ -89,8 +89,8 @@ def login(req, res):
     '''
 
     reqdata = req['params']
-    if 'num' in reqdata and 'password' in reqdata:
-        usr = reqdata['num']
+    if 'user' in reqdata and 'password' in reqdata:
+        usr = reqdata['user']
         password = reqdata['password']
         try:
             password_ = user.select("WHERE usr={0}".format(usr), 'password')[0]['password']

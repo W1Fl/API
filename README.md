@@ -58,7 +58,7 @@ API文档
     /signup<br/>
     </td>
     <td>
-    number<br/>
+    user<br/>
     password<br/>
     key<br/>
     </td>
@@ -80,7 +80,7 @@ API文档
     /login<br/>
     </td>
     <td>
-    num<br/>
+    user<br/>
     password<br/>
     </td>
     <td>
