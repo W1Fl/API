@@ -92,7 +92,10 @@ def login(req, res):
     if 'num' in reqdata and 'password' in reqdata:
         usr = reqdata['num']
         password = reqdata['password']
-        password_ = user.select("WHERE usr={0}".format(usr), 'password')[0]['password']
+        try:
+            password_ = user.select("WHERE usr={0}".format(usr), 'password')[0]['password']
+        except:
+            password_=None
         if password_ == password:
             cookie = mycookie(
                 cookie=dict(
