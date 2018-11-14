@@ -45,7 +45,7 @@ def signup(req, res):
         ('Server', 'yuyangServer v0.1'),
     ])
     reqdata = req['params']  # 选择通过get或post获取请求数据
-    result = 'error'
+    result = b'error'
     if 'user' in reqdata and reqdata['user']:
         number = reqdata['user']
 
@@ -54,7 +54,7 @@ def signup(req, res):
             message.set(number, tpl_value, 120)
             print(message[number])
             messagesend.send(number, tpl_value)
-            restlt = b'waiting'
+            result = b'waiting'
 
         elif 'password' in reqdata:
             if message[number] and message[number] == reqdata['key']:
