@@ -24,6 +24,7 @@ class module():
             print(e)
 
     def commit(self):
+        self.db.ping()
         return self.db.commit()
 
     def update(self, key, **kwargs):
