@@ -4,7 +4,8 @@ class urls():
         '/':test,
         '/signup':signup,
         '/login':login,
-        '/movie':movie
+        '/movie':movie,
+        '/newmovie':newmovie,
     }
     def run(self,req,res):
         try:

@@ -38,6 +38,8 @@ def pagedownload(movieurl):
     :param movieurl: 电影页面的url
     :return: 提取到的数据
     '''
+
+    print(movieurl)
     #创建一个空的字典用来保存提取到的数据
     data = dict()
     #下载网页并构造成 lxml 的 etree 对象
@@ -111,6 +113,10 @@ def homedownload(page):
     for i in data['subjects']:
         yield i['url']
 
+def newmoviedownload(count=6):
+    newmoviedata=session.get('https://api.douban.com/v2/movie/in_theaters?apikey=0b2bdeda43b5688921839c8ecb20399b',params={'count':count}).json()
+    return newmoviedata
+
 
 def init():
     session.headers = {
@@ -125,5 +131,4 @@ if __name__ == '__main__':
             data=pagedownload(i)
             saver(data=data)
             time.sleep(2)
-        movietable.commit()
-    # pagedownload('https://movie.douban.com/subject/26985127/')
+        # movietable.commit()

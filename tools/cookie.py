@@ -21,3 +21,11 @@ def searchobjbycookie(ittr, key, value):
         j = ittr[i]
         if key in j and j.get(key).value == value:
             return j
+
+def logined(cookiec,req):
+    try:
+        cookie = searchobjbycookie(cookiec, 'token', mycookie(req['cookie']).get('token').value)
+    except Exception as e:
+        print(e)
+        cookie = None
+    return cookie
