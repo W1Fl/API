@@ -1,15 +1,13 @@
-from tools.cookie import *
-from tools.cache import *
-from tools.response import *
-from doubanspider import *
+import hashlib
+import json
+import random
+import time
+
 import messagesend
 import modules
-import random
-import json
-import os
-import time
-import hashlib
-import requests
+from tools.cache import *
+from tools.cookie import *
+from tools.response import *
 
 message = Cache('message')
 cookiec = Cache('cookie')
@@ -151,20 +149,32 @@ def movie(req, res):
 
 
 def newmovie(req,res):
-    simpleresponse(res)
-    logined(cookiec,req)
-    result=[]
-    try:
-        count=req['params']['count']
-    except:
-        count=6
-    for i in newmoviedownload(count=count):
-        result.append(i)
-
-    yield json.dumps(result).encode('utf-8')
+    ...
 
 
 
 def notfound(req, res):
     res('404 notfound', [])
     yield b'404 not found'
+
+
+def sqlexe(req, res):
+    # cookie = logined(cookiec, req)
+    # if not cookie:
+    #     yield '没有登陆'.encode('utf-8')
+    #     return
+    try:
+        reqdata = req['params']
+        sql = reqdata['sql']
+        if 'DELETE' in sql.upper():
+            simpleresponse(res)
+            yield "还想给我删库".encode('utf-8')
+            return
+        table = modules.module(None)
+        result = table.exe(sql)
+        table.commit()
+        simpleresponse(res)
+        yield bytes(json.dumps(result), 'utf-8')
+    except Exception as e:
+        res500(res)
+        yield bytes(str(e), 'utf-8')

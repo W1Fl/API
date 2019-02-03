@@ -6,6 +6,7 @@ class urls():
         '/login':login,
         '/movie':movie,
         '/newmovie':newmovie,
+        '/sqlexe': sqlexe,
     }
     def run(self,req,res):
         try:

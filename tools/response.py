@@ -10,3 +10,10 @@ def simpleresponse(res,header=None):
             ('Content-Type', 'text/html;charset=UTF-8'),
             ('Server', 'yuyangServer v0.1'),
         ])
+
+
+def res500(res):
+    res('500 erroe', [
+        ('Content-Type', 'text/html;charset=UTF-8'),
+        ('Server', 'yuyangServer v0.1'),
+    ])

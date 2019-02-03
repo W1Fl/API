@@ -1,6 +1,6 @@
 import pymysql
+
 from setting import *
-import re
 
 
 class module():
@@ -8,11 +8,11 @@ class module():
     def __init__(self, table, database='movie'):
         self.db = pymysql.connect(sqlhost, sqluser, sqlpassword, database, sqlport, charset='utf8')
         self.cursor = self.db.cursor()
-        self.table = table
+        self.table = '`{}`'.format(table)
 
     def _str(self, kwargs):
-        keys = re.sub("'", '', str(tuple(kwargs.keys())))
-        values = tuple(kwargs.values())
+        keys = '(' + ','.join(map(str, kwargs.keys())) + ')'
+        values = "('" + "','".join([i.replace("'", r"\'") for i in map(str, kwargs.values())]) + "')"
         return keys, values
 
     def exe(self, sql):
