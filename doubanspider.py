@@ -7,6 +7,7 @@ import modules
 
 # 目录页电影个数
 pagelimit = 20
+zt=0
 
 # 目录页
 homeurl = 'https://movie.douban.com/j/search_subjects'
@@ -25,7 +26,7 @@ regmovietable = modules.module('region-movie')
 
 
 def getid(table):
-    return table.exe('select max(id) from {}'.format(table.table))
+    return table.exe('select max(id) from {}'.format(table.table))[0][0]
 
 
 movieid = getid(movietable)
@@ -40,30 +41,32 @@ def saver(data):
     数据保存方法
     :param data:数据字典
     '''
-
+    m=movietable.select('where 豆瓣id={}'.format(data['豆瓣id']),'id','状态')
+    if m:
+        if m[0]['状态']==zt:
+            return
+        else:
+            movietable.exe(movietable.update('id={}'.format(m[0]['id']),状态=zt))
+            movietable.commit()
+            return
     global movieid, urlid, actid, classid, regid
     # 构造插入该数据的sql语句
     movieid += 1
     data['id'] = movieid
-    actor = [i.strip() for i in data.pop('主演').split('/')]
-    cla = [i.strip() for i in data.pop('类型').split('/')]
-    reg = [i.strip() for i in data.pop('制片国家').split('/')]
-    try:
-        url = data.pop('观看地址')
-        have_url = True
-    except:
-        have_url = False
+    actor = [i.strip() for i in data.pop('主演').split('/')] if '主演' in data.keys() else []
+    cla = [i.strip() for i in data.pop('类型').split('/')] if '类型' in data.keys() else []
+    reg = [i.strip() for i in data.pop('制片国家').split('/')] if '制片国家' in data.keys() else []
+    url = data.pop('观看地址')if '观看地址' in data.keys() else {}
     sql = movietable.insert(**data)
     # 执行插入语句
     movietable.exe(sql)
     movietable.commit()
 
-    if have_url:
-        for i in url.keys():
-            urlid += 1
-            sql = urltable.insert(id=urlid, 电影id=movieid, 平台=i, 地址=url[i])
-            urltable.exe(sql)
-        urltable.commit()
+    for i in url.keys():
+        urlid += 1
+        sql = urltable.insert(id=urlid, 电影id=movieid, 平台=i, 地址=url[i])
+        urltable.exe(sql)
+    urltable.commit()
 
     for i in actor:
         id = actortable.select('where 姓名="{}"'.format(i), 'id')
@@ -119,7 +122,8 @@ def pagedownload(movieurl):
     '''
 
     # 创建一个空的字典用来保存提取到的数据
-    data = dict(豆瓣id=movieurl.split('/')[-2])
+    id=movieurl.split('/')[-2]
+    data = dict(豆瓣id=id)
     # 下载网页并构造成 lxml 的 etree 对象
     h = session.get(movieurl).content
     h = html.fromstring(h)
@@ -141,7 +145,7 @@ def pagedownload(movieurl):
         except:
             ...
     score = presentation.xpath('.//strong[@class="ll rating_num"]')[0].text
-    data['评分'] = score
+    data['评分'] = score if score else '0'
     playplace = h.xpath('.//div[@class="gray_ad"]/ul/li/a')
     data['观看地址'] = {}
     for i in playplace:
@@ -173,6 +177,7 @@ def pagedownload(movieurl):
             '简介'
         }:
             data.pop(i)
+        data['状态'] = zt
     return data
 
 
@@ -194,11 +199,13 @@ def homedownload(page):
         yield i['url']
 
 
-def newmoviedownload(count=6):
-    newmoviedata = session.get('https://api.douban.com/v2/movie/in_theaters?apikey=0b2bdeda43b5688921839c8ecb20399b',
-                               params={'count': count}).json()
+def newmoviedownload(count=20):
+    newmoviedata = session.get('https://api.douban.com/v2/movie/'+['in_theaters','coming_soon'][zt-1],
+                               params={'apikey':'0b2bdeda43b5688921839c8ecb20399b','count': count}).json()
     return newmoviedata
 
+def initzt():
+    movietable.exe(movietable.update('状态!=0',状态=0))
 
 def init():
     session.headers = {
@@ -208,8 +215,27 @@ def init():
 
 if __name__ == '__main__':
     init()
-    for j in range(0, 20):
-        for i in homedownload(j):
-            data = pagedownload(i)
-            saver(data=data)
-            time.sleep(2)
+    zt=1
+    print('正在热映')
+    print('#'*10)
+    for i in newmoviedownload()['subjects']:
+        data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
+        saver(data=data)
+        time.sleep(2)
+    zt=2
+    print('即将上映')
+    print('#'*10)
+    for i in newmoviedownload()['subjects']:
+        data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
+        saver(data=data)
+        time.sleep(2)
+    # zt=0
+    # print('可观看')
+    # print('#'*10)
+    # for j in range(0, 20):
+    #     for i in homedownload(j):
+    #         print(i)
+    #         data = pagedownload(i)
+    #         saver(data=data)
+    #         time.sleep(2)
+
