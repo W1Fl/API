@@ -5,8 +5,8 @@ class urls():
         '/signup':signup,
         '/login':login,
         '/movie':movie,
-        '/newmovie':newmovie,
         '/sqlexe': sqlexe,
+        '/dynamic': dynamic,
     }
     def run(self,req,res):
         try:

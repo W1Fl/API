@@ -2,10 +2,11 @@ from http import cookies, cookiejar
 
 
 class mycookie(cookies.SimpleCookie):
-    def __init__(self, cookie=None, user=None):
+    def __init__(self, cookie=None, user=None, id=None):
         super(mycookie, self).__init__()
         cookie and self.load(cookie)
         self.user = user
+        self.id = id
 
     def outputtuple(self, attrs=None):
         baseoutput = self.output(attrs=attrs)
@@ -21,6 +22,7 @@ def searchobjbycookie(ittr, key, value):
         j = ittr[i]
         if key in j and j.get(key).value == value:
             return j
+
 
 def logined(cookiec,req):
     try:

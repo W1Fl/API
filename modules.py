@@ -13,6 +13,7 @@ class module():
     def _str(self, kwargs):
         keys = '(' + ','.join(map(str, kwargs.keys())) + ')'
         values = "('" + "','".join([i.replace("'", r"\'") for i in map(str, kwargs.values())]) + "')"
+        values = values.replace("'NULL'", 'NULL')
         return keys, values
 
     def exe(self, sql):
@@ -34,6 +35,7 @@ class module():
     def select(self, key, *args):
         if '*' in args:
             args = [i[0] for i in self.exe('DESC {0};'.format(self.table))]
+        print("SELECT {0} FROM {1} {2}".format(','.join(args), self.table, key))
         selectdata = self.exe("SELECT {0} FROM {1} {2}".format(','.join(args), self.table, key))
         result = []
         for i in selectdata:

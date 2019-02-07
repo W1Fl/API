@@ -39,7 +39,6 @@ class Cache:
     def set(self, key, value, expires=0):
         key = str(key)
         value = pickle.dumps(value)
-        print(value)
         if uwsgi.cache_exists(key, self.cachename):
             uwsgi.cache_update(key, value, expires, self.cachename)
         else:
