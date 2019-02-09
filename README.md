@@ -9,19 +9,31 @@
 .
 ├── application.py
 ├── doubanspider.py
-├── massagesend.py
+├── img
+│   └── 1.jpg
+├── messagesend.py
 ├── modules.py
 ├── pages.py
 ├── post.py
+├── README.md
 ├── setting.py
 ├── sql
-│   ├── create_movie.sql
-│   ├── create_user.sql
-│   ├── movie_movies.sql
-│   └── movie_user.sql
+│   ├── movie_Movie.sql
+├── temp.html
 ├── tools
+│   ├── cache.py
 │   ├── cookie.py
-│   └── __init__.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── cache.cpython-36.pyc
+│   │   ├── cookie.cpython-35.pyc
+│   │   ├── cookie.cpython-36.pyc
+│   │   ├── __init__.cpython-35.pyc
+│   │   ├── __init__.cpython-36.pyc
+│   │   ├── render.cpython-36.pyc
+│   │   └── response.cpython-36.pyc
+│   ├── render.py
+│   └── response.py
 ├── try.py
 ├── urls.py
 └── uwsgi.ini
@@ -92,7 +104,7 @@ API文档
 </tr>
 <tr>
     <td>
-    获取电影信息<br/>
+    获取电影,演员,类别信息<br/>
     </td>
     <td>
     /movie<br/>
@@ -102,6 +114,10 @@ API文档
     id_start<br/>
     id_limit<br/>
     searchname<br/>
+    actorname<br/>
+    state<br/>
+    actorid<br/>
+    classid<br/>
     </td>
     <td>
     json<br/>
@@ -113,6 +129,52 @@ API文档
     如果不携带参数，则返回所有行的id，片名，海报，评分字段<br/>
     支持通过 id_start id_limit 两个参数截取表的部分行并返回部分行的id，片名，海报，评分字段<br/>
     支持通过参数 searchname 做片名搜索，并返回符合搜索的行的id，片名，海报，评分字段<br/>
+    </td>
+</tr>
+<tr>
+    <td>
+    动态读写<br/>
+    </td>
+    <td>
+    /dynamic<br/>
+    </td>
+    <td>
+    constant<br/>
+    base<br/>
+    movie<br/>
+    start<br/>
+    end<br/>
+    baseid<br/>
+    movieid<br/>
+    userid<br/>
+    </td>
+    <td>
+    json<br/>
+    </td>
+    <td>
+    需要登陆<br/>
+    写动态时携带参数 constant <br/>
+    可携带参数base表示回复的动态id<br/>
+    可携带参数movie表示被评论的电影id<br/>
+    获取动态时携带参数start和end,表示获取动态分页<br/>
+    可以通过userid movieid baseid获取对应动态列表<br/>
+    </td>
+</tr>
+<tr>
+    <td>
+    sql执行<br/>
+    </td>
+    <td>
+    /sqlexe<br/>
+    </td>
+    <td>
+    sql<br/>
+    </td>
+    <td>
+    json<br/>
+    </td>
+    <td>
+    可以执行sql语句,危险<br/>
     </td>
 </tr>
 </table>

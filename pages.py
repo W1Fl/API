@@ -2,12 +2,13 @@ import hashlib
 import json
 import random
 import time
-
 import messagesend
 import modules
 from tools.cache import *
 from tools.cookie import *
 from tools.response import *
+from tools.render import *
+
 
 message = Cache('message')
 cookiec = Cache('cookie')
@@ -34,7 +35,9 @@ def test(req, res):
     :return:
     '''
     simpleresponse(res)
-    yield open('img/1.jpg', 'rb').read()
+    yield render('test.html', {})
+
+
 
 
 def signup(req, res):
@@ -274,7 +277,7 @@ def sqlexe(req, res):
     #     return
     try:
         reqdata = req['params']
-        sql = reqdata['sql']
+        sql = reqdata['sql'].replace('+', ' ')
         if 'DELETE' in sql.upper() or 'DROP' in sql.upper():
             simpleresponse(res)
             yield "还想给我删库".encode('utf-8')
