@@ -18,6 +18,7 @@ class module():
 
     def exe(self, sql):
         try:
+            self.db.ping()
             self.cursor.execute(sql)
             return self.cursor.fetchall()
         except pymysql.Error as e:
@@ -25,7 +26,6 @@ class module():
             print(e)
 
     def commit(self):
-        self.db.ping()
         return self.db.commit()
 
     def update(self, key, **kwargs):

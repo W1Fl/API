@@ -25,7 +25,7 @@ clamovietable = modules.module('class-movie')
 regtable = modules.module('region')
 regmovietable = modules.module('region-movie')
 dynamictable = modules.module('dynamic')
-datatuple = tuple('id', '片名', '海报', '简介')
+datatuple = ('id', '片名', '海报', '简介')
 
 
 def test(req, res):
