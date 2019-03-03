@@ -25,6 +25,7 @@ clamovietable = modules.module('class-movie')
 regtable = modules.module('region')
 regmovietable = modules.module('region-movie')
 dynamictable = modules.module('dynamic')
+datatuple = tuple('id', '片名', '海报', '简介')
 
 
 def test(req, res):
@@ -140,7 +141,7 @@ def findmovie(reqdata):
 
     elif 'actorid' in reqdata:
         movieid = tuple(i['电影id'] for i in actmovietable.select("where 演员id='{}'".format(reqdata['actorid']), '电影id'))
-        result = movietable.select("where id in {} and 状态='0'".format(str(movieid)), 'id', '片名', '海报', '评分')
+        result = movietable.select("where id in {} and 状态='0'".format(str(movieid)), *datatuple)
 
     elif 'classid' in reqdata:
         if reqdata['classid'] == '0':
@@ -148,7 +149,7 @@ def findmovie(reqdata):
         else:
             movieid = tuple(
                 i['电影id'] for i in clamovietable.select("where 类别id='{}'".format(reqdata['classid']), '电影id'))
-            result = movietable.select("where id in {} and 状态='0'".format(str(movieid)), 'id', '片名', '海报', '评分')
+            result = movietable.select("where id in {} and 状态='0'".format(str(movieid)), *datatuple)
 
     return result
 
@@ -173,10 +174,10 @@ def movie(req, res):
     #     yield '没有登陆'.encode('utf-8')
     #     return
     if not reqdata:
-        result = movietable.select("", 'id', '片名', '海报', '评分')
+        result = movietable.select("", *datatuple)
 
     elif ~state:
-        result = movietable.select("where 状态='{}'".format(state), 'id', '片名', '海报', '评分')
+        result = movietable.select("where 状态='{}'".format(state), *datatuple)
 
     elif 'id' in reqdata:
         result = movietable.select("WHERE id='{0}'".format(reqdata['id']), '*')
@@ -185,19 +186,20 @@ def movie(req, res):
         result[0]['类别'] = clatable.select(
             "where id in (select 类别id from `class-movie` where 电影id='{}')".format(reqdata['id']), '*')
         # 使用两种方法实现了演员(分开查询)和类别(子查询)的查询
+        result[0]['观看链接'] = {i['平台']: i['地址'] for i in urltable.select("where 电影id='{}'".format(reqdata['id']), '*')}
 
 
     elif 'searchname' in reqdata:
         result = movietable.select(
             "WHERE 片名 like '%{0}%'".format(reqdata['searchname']),
-            'id', '片名', '海报', '评分'
+            *datatuple
         )
 
     elif 'id_start' in reqdata and 'id_limit' in reqdata:
         result = movietable.select(
             "WHERE id between '{0}' and '{1}'".format(reqdata['id_start'],
                                                       str(int(reqdata['id_start']) + int(reqdata['id_limit']))),
-            'id', '片名', '海报', '评分'
+            *datatuple
         )
     else:
         result = findmovie(reqdata)

@@ -1,3 +1,24 @@
+create table MOVIE.USER
+(
+  ID       int(11) primary key not null auto_increment,
+  USR      varchar(16)         not null,
+  PASSWORD varchar(16)         not null,
+  VIP      tinyint(1)                   default '0',
+  NUMBER   char(11),
+  签名       text
+);
+create unique index USR
+  on MOVIE.USER (USR);
+insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
+values (1, '123123', '3142', 0, null, null);
+insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
+values (4, '1231u23', '3142', 0, null, null);
+insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
+values (6, '18285734822', '12345', 0, null, null);
+insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
+values (7, '13055281750', '3.1415926', 0, null, null);
+insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
+values (8, '18144041002', '161664wyy', 0, null, null);
 create table MOVIE.MOVIE
 (
   ID   int(11),
@@ -27588,24 +27609,3 @@ insert into MOVIE.`region-movie` (地区ID, 电影ID)
 values (1, 306);
 insert into MOVIE.`region-movie` (地区ID, 电影ID)
 values (1, 307);
-create table MOVIE.USER
-(
-  ID       int(11) primary key not null auto_increment,
-  USR      varchar(16)         not null,
-  PASSWORD varchar(16)         not null,
-  VIP      tinyint(1)                   default '0',
-  NUMBER   char(11),
-  签名       text
-);
-create unique index USR
-  on MOVIE.USER (USR);
-insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
-values (1, '123123', '3142', 0, null, null);
-insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
-values (4, '1231u23', '3142', 0, null, null);
-insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
-values (6, '18285734822', '12345', 0, null, null);
-insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
-values (7, '13055281750', '3.1415926', 0, null, null);
-insert into MOVIE.USER (ID, USR, PASSWORD, VIP, NUMBER, 签名)
-values (8, '18144041002', '161664wyy', 0, null, null);
