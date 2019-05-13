@@ -25,7 +25,9 @@ clamovietable = modules.module('class-movie')
 regtable = modules.module('region')
 regmovietable = modules.module('region-movie')
 dynamictable = modules.module('dynamic')
-datatuple = ('id', '片名', '海报', '简介')
+collectiontable = modules.module('collection')
+
+datatuple = ('id', '片名', '海报', '简介', '评分')
 
 
 def test(req, res):
@@ -38,6 +40,32 @@ def test(req, res):
     simpleresponse(res)
     yield render('test.html', {})
 
+
+def collection(req, res):
+    simpleresponse(res)
+    reqdata = req['params']  # 选择通过get或post获取请求数据
+    cookie = logined(cookiec, req)
+    if not cookie:
+        yield '没有登陆'.encode('utf-8')
+        return
+    movie = reqdata.get('movie')
+    key = reqdata.get('key')
+    if movie:
+        ced = collectiontable.select('where 用户=%s and 电影=%s' % (cookie.user, movie), 'id')
+        if key:
+            return len(ced)
+        else:
+            if len(ced):
+                collectiontable.exe('delete from collection  where id=%s' % ced[0])
+                collectiontable.commit()
+            else:
+                sql = collectiontable.insert(用户=cookie.user, 电影=movie)
+                collectiontable.exe(sql)
+                collectiontable.commit()
+            return 'success'
+    else:
+        ced = collectiontable.select('where 用户=%s' % (cookie.user), 'id')
+        yield bytes(json.dumps(ced), 'utf-8')
 
 
 
@@ -186,7 +214,7 @@ def movie(req, res):
         result[0]['类别'] = clatable.select(
             "where id in (select 类别id from `class-movie` where 电影id='{}')".format(reqdata['id']), '*')
         # 使用两种方法实现了演员(分开查询)和类别(子查询)的查询
-        result[0]['观看链接'] = {i['平台']: i['地址'] for i in urltable.select("where 电影id='{}'".format(reqdata['id']), '*')}
+        result[0]['观看链接'] = urltable.select("where 电影id='{}'".format(reqdata['id']), '*')
 
 
     elif 'searchname' in reqdata:
@@ -210,6 +238,7 @@ def movie(req, res):
 
 
 def dynamic(req, res):
+    print(req)
     '''
     查看动态和写动态的功能
     写动态的参数有
@@ -250,8 +279,13 @@ def dynamic(req, res):
                 reqdata['userid'], int(reqdata['start']), int(reqdata['end'])), '*')
 
         elif 'movieid' in reqdata:
-            result = dynamictable.select("where 电影id ='%s' order by id desc limit %d,%d" % (
-                reqdata['movieid'], int(reqdata['start']), int(reqdata['end'])), '*')
+            k = reqdata['movieid'] == 'null'
+            if k:
+                result = dynamictable.select("where 电影id is null order by id desc limit %d,%d" % (
+                    int(reqdata['start']), int(reqdata['end'])), '*')
+            else:
+                result = dynamictable.select("where 电影id ='%s' order by id desc limit %d,%d" % (
+                    reqdata['movieid'], int(reqdata['start']), int(reqdata['end'])), '*')
         elif 'baseid' in reqdata:
             result = dynamictable.select("where 回复 ='%s' order by id desc limit %d,%d" % (
                 reqdata['baseid'], int(reqdata['start']), int(reqdata['end'])), '*')

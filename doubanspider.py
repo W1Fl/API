@@ -53,7 +53,7 @@ def saver(data):
     # 构造插入该数据的sql语句
     movieid += 1
     data['id'] = movieid
-    actor = [i.strip() for i in data.pop('主演').split('/')] if '主演' in data.keys() else []
+    actor = data.pop('主演') if '主演' in data.keys() else ()
     cla = [i.strip() for i in data.pop('类型').split('/')] if '类型' in data.keys() else []
     reg = [i.strip() for i in data.pop('制片国家').split('/')] if '制片国家' in data.keys() else []
     url = data.pop('观看地址')if '观看地址' in data.keys() else {}
@@ -69,16 +69,18 @@ def saver(data):
     urltable.commit()
 
     for i in actor:
-        id = actortable.select('where 姓名="{}"'.format(i), 'id')
-        if not id:
-            actid += 1
-            id = actid
-            sql = actortable.insert(姓名=i, id=actid)
+        id = actortable.select('where id="{}"'.format(i), 'id')
+        if not len(id):
+            json = session.get(
+                'https://api.douban.com/v2/movie/celebrity/%s?apikey=0b2bdeda43b5688921839c8ecb20399b' % i).json()
+            img = json['avatars']['small']
+            name = json['name']
+            sql = actortable.insert(姓名=name, id=i, 海报=img)
             actortable.exe(sql)
             actortable.commit()
         else:
-            id = id[0]['id']
-        sql = actmovietable.insert(电影id=movieid, 演员id=id)
+            ...
+        sql = actmovietable.insert(电影id=movieid, 演员id=i)
         actmovietable.exe(sql)
     actmovietable.commit()
 
@@ -113,6 +115,12 @@ def saver(data):
     print(reg)
     regmovietable.commit()
 
+    print('正在热映')
+    print('#' * 10)
+    for i in newmoviedownload()['subjects']:
+        data = pagedownload('https://movie.douban.com/subject/%s/' % i['id'])
+        saver(data=data)
+        time.sleep(2)
 
 def pagedownload(movieurl):
     '''
@@ -144,6 +152,10 @@ def pagedownload(movieurl):
             data[i[0]] = i[1]
         except:
             ...
+    actor = []
+    for i in maindatalist.xpath('.//span[@class="actor"]/span[@class="attrs"]//a'):
+        actor.append(i.attrib.get('href').split('/')[2])
+    actor = tuple(actor)
     score = presentation.xpath('.//strong[@class="ll rating_num"]')[0].text
     data['评分'] = score if score else '0'
     playplace = h.xpath('.//div[@class="gray_ad"]/ul/li/a')
@@ -152,6 +164,7 @@ def pagedownload(movieurl):
         site = i.attrib['data-cn']
         playurl = i.attrib['href']
         data['观看地址'][site] = playurl
+    data['主演'] = actor
     data['片名'] = h.xpath('.//span[@property="v:itemreviewed"]')[0].text
     data['简介'] = h.xpath('.//span[@property="v:summary"]')[0].text.lstrip()
     print(data['片名'])
@@ -199,6 +212,9 @@ def homedownload(page):
         yield i['url']
 
 
+def getactorimage(name):
+    sel = session.get('https://movie.douban.com/subject_search?search_text=%s' % name)
+
 def newmoviedownload(count=20):
     newmoviedata = session.get('https://api.douban.com/v2/movie/'+['in_theaters','coming_soon'][zt-1],
                                params={'apikey':'0b2bdeda43b5688921839c8ecb20399b','count': count}).json()
@@ -215,13 +231,13 @@ def init():
 
 if __name__ == '__main__':
     init()
-    zt=1
-    print('正在热映')
-    print('#'*10)
-    for i in newmoviedownload()['subjects']:
-        data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
-        saver(data=data)
-        time.sleep(2)
+    # zt=1
+    # print('正在热映')
+    # print('#'*10)
+    # for i in newmoviedownload()['subjects']:
+    #     data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
+    #     saver(data=data)
+    #     time.sleep(2)
     zt=2
     print('即将上映')
     print('#'*10)
