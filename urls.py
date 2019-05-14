@@ -7,6 +7,9 @@ class urls():
         '/movie':movie,
         '/sqlexe': sqlexe,
         '/dynamic': dynamic,
+        '/collection': collection,
+        '/finduser': finduser,
+        '/information': information
     }
     def run(self,req,res):
         try:

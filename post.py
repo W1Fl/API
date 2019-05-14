@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 import requests
 
+sess = requests.Session()
 
-print(requests.post('http://127.0.0.1:8000/url?asd=123&ss=11',{'wifi':'1234','aaa':32}).text)
+print(sess.get('http://127.0.0.1:8000/login', params={'user': '18285734822', 'password': 12345}).text)
+print(sess.get('http://127.0.0.1:8000/collection', params={}).text)

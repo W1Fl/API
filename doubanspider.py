@@ -26,7 +26,8 @@ regmovietable = modules.module('region-movie')
 
 
 def getid(table):
-    return table.exe('select max(id) from {}'.format(table.table))[0][0]
+    id = table.exe('select max(id) from {}'.format(table.table))[0][0]
+    return id if id else 0
 
 
 movieid = getid(movietable)
@@ -84,7 +85,6 @@ def saver(data):
         actmovietable.exe(sql)
     actmovietable.commit()
 
-    print(actor)
     for i in cla:
         id = clatable.select('where 类别名="{}"'.format(i), 'id')
         if not id:
@@ -99,7 +99,6 @@ def saver(data):
         clamovietable.exe(sql)
     clamovietable.commit()
 
-    print(cla)
     for i in reg:
         id = regtable.select('where 地区="{}"'.format(i), 'id')
         if not id:
@@ -114,13 +113,6 @@ def saver(data):
         regmovietable.exe(sql)
     print(reg)
     regmovietable.commit()
-
-    print('正在热映')
-    print('#' * 10)
-    for i in newmoviedownload()['subjects']:
-        data = pagedownload('https://movie.douban.com/subject/%s/' % i['id'])
-        saver(data=data)
-        time.sleep(2)
 
 def pagedownload(movieurl):
     '''
@@ -154,7 +146,10 @@ def pagedownload(movieurl):
             ...
     actor = []
     for i in maindatalist.xpath('.//span[@class="actor"]/span[@class="attrs"]//a'):
-        actor.append(i.attrib.get('href').split('/')[2])
+        try:
+            actor.append(i.attrib.get('href').split('/')[2])
+        except:
+            ...
     actor = tuple(actor)
     score = presentation.xpath('.//strong[@class="ll rating_num"]')[0].text
     data['评分'] = score if score else '0'
@@ -231,27 +226,27 @@ def init():
 
 if __name__ == '__main__':
     init()
-    # zt=1
-    # print('正在热映')
-    # print('#'*10)
-    # for i in newmoviedownload()['subjects']:
-    #     data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
-    #     saver(data=data)
-    #     time.sleep(2)
+    zt = 1
+    print('正在热映')
+    print('#' * 10)
+    for i in newmoviedownload()['subjects']:
+        data = pagedownload('https://movie.douban.com/subject/%s/' % i['id'])
+        saver(data=data)
+        time.sleep(2)
     zt=2
     print('即将上映')
     print('#'*10)
     for i in newmoviedownload()['subjects']:
+        print(i['id'])
         data=pagedownload('https://movie.douban.com/subject/%s/'%i['id'])
         saver(data=data)
         time.sleep(2)
-    # zt=0
-    # print('可观看')
-    # print('#'*10)
-    # for j in range(0, 20):
-    #     for i in homedownload(j):
-    #         print(i)
-    #         data = pagedownload(i)
-    #         saver(data=data)
-    #         time.sleep(2)
-
+    zt = 0
+    print('可观看')
+    print('#' * 10)
+    for j in range(0, 20):
+        for i in homedownload(j):
+            print(i)
+            data = pagedownload(i)
+            saver(data=data)
+            time.sleep(2)

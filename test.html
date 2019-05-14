@@ -98,6 +98,11 @@
         <option value="movie">movie</option>
         <option value="sqlexe">sqlexe</option>
         <option value="dynamic">dynamic</option>
+        <option value="finduser">finduser</option>
+        <option value="collection">collection</option>
+        <option value="information">information</option>
+
+
     </select>
     <div id="varsel"></div>
     <input type="button" onclick="show()" value="确认选择">
@@ -141,7 +146,15 @@
                 case "sqlexe":
                     s = f2(['sql']);
                     break;
+                case "collection":
+                    s = f2(['movie', "key"]);
+                    break;
+                case "finduser":
+                    s = f2(['key', "m"]);
+                    break;
 
+                case "information":
+                    s = f2(['name', 'sign', 'signature'])
             }
             $("#varsel").html(s);
             $("#submitdiv").html("<input type='button' onclick='Ajax()' value='测试'>");

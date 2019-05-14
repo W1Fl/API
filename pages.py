@@ -2,13 +2,13 @@ import hashlib
 import json
 import random
 import time
+
 import messagesend
 import modules
 from tools.cache import *
 from tools.cookie import *
-from tools.response import *
 from tools.render import *
-
+from tools.response import *
 
 message = Cache('message')
 cookiec = Cache('cookie')
@@ -28,6 +28,22 @@ dynamictable = modules.module('dynamic')
 collectiontable = modules.module('collection')
 
 datatuple = ('id', '片名', '海报', '简介', '评分')
+
+
+def finduser(req, res):
+    reqdata = req['params']  # 选择通过get或post获取请求数据
+    key = reqdata.get('key')
+    m = reqdata.get('m')
+    simpleresponse(res)
+    findres = _finduser(key, m)
+    yield findres.encode('utf-8')
+
+
+def _finduser(key, m):
+    if m:
+        return usertable.select('where id=%s' % key, 'usr')[0]['usr']
+    else:
+        return usertable.select('where usr=%s' % key, 'id')[0]['id']
 
 
 def test(req, res):
@@ -51,22 +67,23 @@ def collection(req, res):
     movie = reqdata.get('movie')
     key = reqdata.get('key')
     if movie:
-        ced = collectiontable.select('where 用户=%s and 电影=%s' % (cookie.user, movie), 'id')
+        ced = collectiontable.select('where 用户=%s and 电影=%s' % (cookie.id, movie), '*')
         if key:
-            return len(ced)
+            yield str(len(ced)).encode('utf-8')
         else:
             if len(ced):
-                collectiontable.exe('delete from collection  where id=%s' % ced[0])
+                collectiontable.exe('delete from collection  where 用户=%s and 电影=%s' % (cookie.id, movie))
                 collectiontable.commit()
             else:
-                sql = collectiontable.insert(用户=cookie.user, 电影=movie)
+                print(cookie.user)
+                sql = collectiontable.insert(用户=cookie.id, 电影=movie)
                 collectiontable.exe(sql)
                 collectiontable.commit()
-            return 'success'
+            yield b'success'
     else:
-        ced = collectiontable.select('where 用户=%s' % (cookie.user), 'id')
-        yield bytes(json.dumps(ced), 'utf-8')
 
+        ced = collectiontable.select('where 用户=%s' % (cookie.id), '电影')
+        yield bytes(json.dumps(ced, ensure_ascii=False), 'utf-8')
 
 
 def signup(req, res):
@@ -97,11 +114,11 @@ def signup(req, res):
 
         elif 'password' in reqdata:
             if message[number] and message[number] == reqdata['key']:
-                id = usertable.exe("select id from user where usr='{}'".format(number))
+                id = usertable.select("where number='{}'".format(number), 'id')
                 if id:
-                    sql = usertable.update("id='{0}'".format(id[0][0]), password=reqdata['password'])
+                    sql = usertable.update("id='{0}'".format(id[0]['id']), password=reqdata['password'])
                 else:
-                    sql = usertable.insert(usr=number, password=reqdata['password'])
+                    sql = usertable.insert(usr=number, password=reqdata['password'], number=number)
                 print(sql)
                 usertable.exe(sql)
                 usertable.commit()
@@ -129,7 +146,7 @@ def login(req, res):
         usr = reqdata['user']
         password = reqdata['password']
         try:
-            sqlres = usertable.select("WHERE usr={0}".format(usr), 'id', 'password')[0]
+            sqlres = usertable.select("WHERE number={0}".format(usr), 'id', 'password')[0]
             userid = sqlres['id']
             password_ = sqlres['password']
         except:
@@ -298,6 +315,36 @@ def dynamic(req, res):
         yield bytes(json.dumps(result, ensure_ascii=False), 'utf-8', 'ignore')
 
 
+def information(req, res):
+    '''
+    设置查看个人信息
+    查看:user参数,查询某用户的用户名和签名
+    设置:name,signature参数其中一个或两者,设置昵称和签名
+    '''
+    simpleresponse(res)
+    reqdata = req['params']  # 选择通过get或post获取请求数据
+    name = reqdata.get('name')
+    signature = reqdata.get('signature')
+    user = reqdata.get('user')
+    if user:
+        info = usertable.select("where id=%f" % user, 'usr', '签名')
+        yield bytes(json.dumps(info, ensure_ascii=False), 'utf-8', 'ignore')
+        return
+    try:
+        cookie = logined(cookiec, req)
+        if not cookie:
+            yield '没有登陆'.encode('utf-8')
+            return
+
+        if name:
+            sql = usertable.update('where id=%s' % cookie.id, usr=name)
+            usertable.exe(sql)
+        if signature:
+            sql = usertable.update('where id=%s' % cookie.id, 签名=signature)
+            usertable.exe(sql)
+        yield 'success'.encode('utf-8')
+    except Exception as e:
+        yield str(e).encode('utf-8')
 def notfound(req, res):
     res('404 notfound', [])
     yield b'404 not found'
@@ -314,14 +361,13 @@ def sqlexe(req, res):
     try:
         reqdata = req['params']
         sql = reqdata['sql'].replace('+', ' ')
-        if 'DELETE' in sql.upper() or 'DROP' in sql.upper():
-            simpleresponse(res)
-            yield "还想给我删库".encode('utf-8')
-            return
         table = modules.module(None)
         result = table.exe(sql)
         table.commit()
-        simpleresponse(res)
+        # 允许ajax跨域请求
+        simpleresponse(res, [('Access-Control-Allow-Origin', '*'),
+                             ('Access-Control-Allow-Methods', 'POST'),
+                             ('Access-Control-Allow-Headers', 'x-requested-with,content-type')])
         yield bytes(json.dumps(result), 'utf-8')
     except Exception as e:
         res500(res)
